@@ -1,0 +1,6 @@
+{
+    "name": "Fixmes",
+    "layers": [
+        "/layers/tagging_fixmes_on_ways.json"
+    ]
+}

@@ -251,6 +251,14 @@ function DataLayer(url, data) {
         return absolute_url(data.geojson_url, this.url);
     };
 
+    this.mapbox_style_url = function() {
+        return absolute_url(data.mapbox_style_url, this.url);
+    };
+
+    this.mapbox_style_source = function() {
+        return data.mapbox_style_source;
+    };
+
     this.stats_data_url = function() {
         return absolute_url(data.stats_data_url, this.url);
     };
@@ -382,13 +390,17 @@ function switch_to_layer(id) {
                 tileGrid: ol.tilegrid.createXYZ({maxZoom: 14}),
                 url: layer.vector_tile_url(),
                 wrapX: false
-            }),
-            style: function(feature) {
-                return styles[feature.getGeometry().getType()];
-            }
+            })
         });
-
-        map.addLayer(vt_layer);
+        if (layer.mapbox_style_url()) {
+            fetch(layer.mapbox_style_url())
+                .then(r => r.json())
+                .then((glStyle) => {
+                    olms.applyStyle(vt_layer, glStyle, layer.mapbox_style_source()).then(() => {
+                        map.addLayer(vt_layer);
+                    });
+            });
+        }
     } else if (layer.geojson_url()) {
         vt_layer = new ol.layer.Vector({
             source: new ol.source.Vector({
@@ -823,7 +835,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     window.addEventListener("load", function(event) {
         if (window.localStorage.getItem("sources") === null) {
-            load_data_source('http://area.jochentopf.com/osmm/layers.json');
+            load_data_source('/layers.json');
         } else {
             var sources = JSON.parse(window.localStorage.getItem("sources"));
             sources.forEach(function(source) {
